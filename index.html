@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cálculo dos Fatores de Redução de Limites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-marca">
+    <span class="topo-icone">🎀</span>
+    <div>
+      <h1>Cálculo dos Fatores de Redução de Limites</h1>
+      <p>Relatório técnico de avaliações químicas · Modelo Brief &amp; Scala</p>
+    </div>
+  </div>
+  <nav class="abas" role="tablist">
+    <button class="aba ativa" data-aba="calc">🧮 Calculadora</button>
+    <button class="aba" data-aba="relatorio">📄 Relatório</button>
+    <button class="aba" data-aba="acgih">🧪 Agentes ACGIH</button>
+    <button class="aba" data-aba="nr15">📚 Tabela NR15</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= CALCULADORA ================= -->
+<section id="aba-calc" class="painel ativo">
+  <div class="grade-calc">
+    <div class="cartao">
+      <h2>Parâmetros</h2>
+
+      <label class="rotulo">Jornada de trabalho 👷</label>
+      <div class="segmentado" id="seg-jornada">
+        <button data-v="Até 8 horas">Até 8 horas</button>
+        <button data-v="Acima de 8 horas">Acima de 8 horas</button>
+      </div>
+      <p class="dica" id="dica-jornada"></p>
+
+      <label class="rotulo">Fonte do limite</label>
+      <div class="segmentado" id="seg-fonte">
+        <button data-v="Automático">Automático</button>
+        <button data-v="NR15">NR15</button>
+        <button data-v="ACGIH">ACGIH</button>
+      </div>
+      <p class="dica">Automático: busca primeiro na tabela da NR15; se não houver valor em ppm, usa a ACGIH.</p>
+
+      <label class="rotulo" for="c-horas" id="lbl-horas">Horas</label>
+      <div class="campo-unidade">
+        <input type="number" id="c-horas" min="1" step="0.5">
+        <span id="un-horas">h/dia</span>
+      </div>
+
+      <label class="rotulo" for="c-agente">Agente 🧪</label>
+      <input type="text" id="c-agente" list="lista-agentes" placeholder="Digite para buscar o agente químico…" autocomplete="off">
+      <datalist id="lista-agentes"></datalist>
+
+      <label class="chk">
+        <input type="checkbox" id="c-limitar">
+        <span>Não permitir que o FR aumente o limite (FR máximo = 1), conforme nota do guia técnico</span>
+      </label>
+    </div>
+
+    <div class="cartao destaque">
+      <h2>Resultado</h2>
+      <div class="kpis">
+        <div class="kpi">
+          <span class="kpi-rot">Resultado 🧮</span>
+          <span class="kpi-val" id="r-resultado">—</span>
+          <span class="kpi-sub">Limite ajustado (TLV-TWA ajustado)</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-rot">Nível de ação 🏃</span>
+          <span class="kpi-val" id="r-nivel">—</span>
+          <span class="kpi-sub">Resultado ÷ 2</span>
+        </div>
+      </div>
+      <dl class="detalhes">
+        <div><dt>Limite base</dt><dd id="r-base">—</dd></div>
+        <div><dt>Origem do limite</dt><dd id="r-origem">—</dd></div>
+        <div><dt>Fator de redução (FR)</dt><dd id="r-fr">—</dd></div>
+      </dl>
+      <div class="formula" id="r-formula"></div>
+      <div class="aviso" id="r-aviso" hidden></div>
+      <button class="btn primario" id="btn-usar-relatorio">Usar no relatório ➜</button>
+    </div>
+  </div>
+
+  <div class="cartao explica">
+    <h2>Como o cálculo é feito</h2>
+    <div class="explica-grade">
+      <div>
+        <h3>Acima de 8 horas (jornada diária)</h3>
+        <p class="eq">FR = <span class="fr"><span>8</span><span>h</span></span> × <span class="fr"><span>24 − h</span><span>16</span></span></p>
+        <p>h = jornada diária · 24 = horas do dia · 16 = horas de descanso.<br>Ex.: n-Hexano, 12 h/dia → FR = 0,5 → 50 ppm × 0,5 = <b>25 ppm</b>.</p>
+      </div>
+      <div>
+        <h3>Até 8 horas (jornada semanal)</h3>
+        <p class="eq">FR = <span class="fr"><span>40</span><span>h</span></span> × <span class="fr"><span>168 − h</span><span>128</span></span></p>
+        <p>h = jornada semanal · 168 = horas da semana · 128 = horas de descanso.<br>Ex.: n-Hexano, 48 h/semana → FR = 0,78 → 50 ppm × 0,78 = <b>39 ppm</b>.</p>
+      </div>
+    </div>
+    <p class="fonte">Fonte: Guia técnico sobre estratégia de amostragem — item 6.11, págs. 25–26 (equações 2 e 3).</p>
+  </div>
+</section>
+
+<!-- ================= RELATÓRIO ================= -->
+<section id="aba-relatorio" class="painel">
+  <div class="grade-rel">
+    <form class="form-rel" id="form-rel" autocomplete="off" onsubmit="return false">
+
+      <details class="bloco" open>
+        <summary>🖼️ Cabeçalho</summary>
+        <label class="rotulo">Título do relatório</label>
+        <input type="text" data-k="titulo">
+        <div class="duas">
+          <div>
+            <label class="rotulo">Logo esquerdo</label>
+            <div class="logo-up" data-logo="logoEsq">
+              <img alt=""><span>Clique para enviar</span>
+              <input type="file" accept="image/*">
+            </div>
+            <button type="button" class="link-rm" data-rm="logoEsq">remover</button>
+          </div>
+          <div>
+            <label class="rotulo">Logo direito</label>
+            <div class="logo-up" data-logo="logoDir">
+              <img alt=""><span>Clique para enviar</span>
+              <input type="file" accept="image/*">
+            </div>
+            <button type="button" class="link-rm" data-rm="logoDir">remover</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="bloco" open>
+        <summary>👩‍🔬 Identificação</summary>
+        <label class="rotulo">GES</label>
+        <textarea rows="2" data-k="ges"></textarea>
+        <div class="duas">
+          <div><label class="rotulo">Data da avaliação</label><input type="date" data-k="data"></div>
+          <div><label class="rotulo">Nº do amostrador</label><input type="text" data-k="amostrador"></div>
+        </div>
+        <label class="rotulo">Nome do trabalhador avaliado</label>
+        <input type="text" data-k="trabalhador">
+        <label class="rotulo">Cargo avaliado</label>
+        <input type="text" data-k="cargo">
+        <div class="duas">
+          <div><label class="rotulo">Tipo de exposição</label><input type="text" data-k="exposicao" list="lista-exposicao"></div>
+          <div><label class="rotulo">Jornada de trabalho</label><input type="text" data-k="jornadaTexto" placeholder="automático"></div>
+        </div>
+        <datalist id="lista-exposicao"><option value="PERMANENTE"><option value="INTERMITENTE"><option value="OCASIONAL"><option value="HABITUAL"></datalist>
+      </details>
+
+      <details class="bloco" open>
+        <summary>🧰 Dados da amostragem</summary>
+        <label class="rotulo">Equipamentos utilizados na avaliação</label>
+        <textarea rows="3" data-k="equipamentos"></textarea>
+      </details>
+
+      <details class="bloco" open>
+        <summary>⏱️ Dados da medição</summary>
+        <div class="quatro">
+          <div><label class="rotulo">Início medição</label><input type="time" data-k="hIni"></div>
+          <div><label class="rotulo">Início intervalo</label><input type="time" data-k="hIntIni"></div>
+          <div><label class="rotulo">Fim intervalo</label><input type="time" data-k="hIntFim"></div>
+          <div><label class="rotulo">Fim medição</label><input type="time" data-k="hFim"></div>
+        </div>
+        <div class="quatro">
+          <div><label class="rotulo">Calib. inicial (L/min)</label><input type="number" step="0.001" data-k="calIni"></div>
+          <div><label class="rotulo">Calib. final (L/min)</label><input type="number" step="0.001" data-k="calFim"></div>
+          <div><label class="rotulo">Média</label><output id="o-media">—</output></div>
+          <div><label class="rotulo">Tempo / Volume</label><output id="o-tempo">—</output></div>
+        </div>
+      </details>
+
+      <details class="bloco" open>
+        <summary>🧤 EPI</summary>
+        <div id="lista-epi"></div>
+        <button type="button" class="btn suave" id="btn-add-epi">+ Adicionar EPI</button>
+      </details>
+
+      <details class="bloco" open>
+        <summary>🧪 Agente químico e resultado</summary>
+        <p class="dica">Agente, jornada e limites vêm da <a href="#" data-ir="calc">Calculadora</a>.</p>
+        <div class="resumo-agente" id="resumo-agente"></div>
+        <div class="tres">
+          <div><label class="rotulo">Método</label><input type="text" data-k="metodo" list="lista-metodos"></div>
+          <div><label class="rotulo">Unidade</label><input type="text" data-k="unidade" placeholder="automático"></div>
+          <div><label class="rotulo">Resultado medido</label><input type="number" step="any" data-k="resultado"></div>
+        </div>
+        <datalist id="lista-metodos"><option value="NIOSH 6016"><option value="NIOSH 1500"><option value="NIOSH 0500"><option value="NIOSH 0600"><option value="NIOSH 7300"></datalist>
+      </details>
+
+      <details class="bloco" open>
+        <summary>🌬️ Fontes e propagação</summary>
+        <label class="rotulo">Fontes geradoras</label>
+        <input type="text" data-k="fontes">
+        <label class="rotulo">Trajetória / Meio de propagação</label>
+        <input type="text" data-k="trajetoria">
+      </details>
+
+      <details class="bloco" open>
+        <summary>📝 Conclusões e pareceres</summary>
+        <label class="chk"><input type="checkbox" data-k="parecerAuto"><span>Gerar parecer automaticamente pelo resultado</span></label>
+        <textarea rows="3" data-k="parecer"></textarea>
+      </details>
+
+
+    </form>
+
+    <div class="previa-wrap">
+      <div class="acoes">
+        <button type="button" class="btn primario" id="btn-pdf">⬇️ Baixar PDF</button>
+        <button type="button" class="btn suave" id="btn-imprimir">🖨️ Imprimir</button>
+        <button type="button" class="btn fantasma" id="btn-exportar">💾 Exportar dados</button>
+        <label class="btn fantasma">📂 Importar<input type="file" id="in-importar" accept="application/json" hidden></label>
+        <button type="button" class="btn fantasma" id="btn-limpar">🧹 Novo relatório</button>
+      </div>
+      <div class="previa-escala" id="previa-escala">
+        <!-- Página A4 do relatório -->
+        <div class="folha" id="folha">
+          <table class="rt cab">
+            <colgroup><col style="width:19.5%"><col><col style="width:16.3%"></colgroup>
+            <tr>
+              <td class="logo"><img id="p-logoEsq" alt=""></td>
+              <td class="titulo" id="p-titulo"></td>
+              <td class="logo"><img id="p-logoDir" alt=""></td>
+            </tr>
+          </table>
+
+          <div class="corpo">
+            <table class="rt">
+              <colgroup><col style="width:64.1%"><col></colgroup>
+              <tr><td colspan="2" class="cinza titulo-sec">PLANILHA DE RESULTADOS AVALIAÇÃO QUÍMICA</td></tr>
+              <tr><td><b>GES</b><div class="ges" id="p-ges"></div></td><td><b>Data avaliação</b><div id="p-data"></div></td></tr>
+              <tr><td><b>Nome do trabalhador Avaliado</b><div id="p-trabalhador"></div></td><td><b>Cargo avaliado</b><div id="p-cargo"></div></td></tr>
+              <tr><td><b>Nº do Amostrador:</b><div>&nbsp;</div></td><td class="topo-v"><div id="p-amostrador"></div></td></tr>
+              <tr><td><b>Tipo de exposição</b><div id="p-exposicao"></div></td><td><b>Jornada de trabalho</b><div id="p-jornada"></div></td></tr>
+              <tr><td colspan="2" class="cinza sec">Dados da amostragem</td></tr>
+              <tr><td colspan="2"><b>Equipamentos utilizados na avaliação</b><div class="pre" id="p-equipamentos"></div></td></tr>
+              <tr><td colspan="2" class="cinza sec">Dados da medição</td></tr>
+            </table>
+
+            <table class="rt c">
+              <colgroup><col style="width:10.5%"><col style="width:10.7%"><col style="width:11.6%"><col style="width:10.9%"><col style="width:20.4%"><col style="width:8.6%"><col style="width:8.5%"><col style="width:9.2%"><col></colgroup>
+              <tr class="cinza b"><td colspan="4">Horário medição</td><td>Tempo</td><td colspan="4">Calibração (L/min)</td></tr>
+              <tr class="b"><td>Início medição</td><td>Início Intervalo</td><td>Fim Intervalo</td><td>Fim medição</td><td>Medição (min)</td><td>Inicial</td><td>Final</td><td>Média</td><td>Volume (L)</td></tr>
+              <tr><td id="p-hIni"></td><td id="p-hIntIni"></td><td id="p-hIntFim"></td><td id="p-hFim"></td><td id="p-tempo"></td><td id="p-calIni"></td><td id="p-calFim"></td><td id="p-media"></td><td id="p-volume"></td></tr>
+            </table>
+
+            <table class="rt c">
+              <colgroup><col style="width:43.7%"><col></colgroup>
+              <tr class="cinza b"><td>EPI</td><td>CA</td></tr>
+              <tbody id="p-epis"></tbody>
+            </table>
+
+            <table class="rt c">
+              <colgroup><col style="width:43.7%"><col style="width:20.4%"><col style="width:14.2%"><col></colgroup>
+              <tr class="cinza b"><td>Agente Químico</td><td>MÉTODO</td><td>Unidade</td><td>Resultado</td></tr>
+              <tr><td id="p-agente"></td><td id="p-metodo"></td><td id="p-unidade"></td><td id="p-resultado"></td></tr>
+            </table>
+
+            <table class="rt c lim">
+              <colgroup><col style="width:22.5%"><col style="width:16.4%"><col style="width:25.2%"><col style="width:17.1%"><col></colgroup>
+              <tr><td colspan="5" class="cinza sec">Limites de Exposições Ocupacionais</td></tr>
+              <tr><td class="b">NR-15</td><td class="b">Limite<br>Variável:</td><td id="p-nr15"></td><td class="b">Nível de Ação:</td><td id="p-nr15na"></td></tr>
+              <tr><td class="b">ACGIH</td><td class="b">Limite<br>Variável:</td><td id="p-acgih"></td><td class="b">Nível de Ação:</td><td id="p-acgihna"></td></tr>
+              <tr><td colspan="2" class="b">TLV-TWA Ajustado<span class="n">:</span></td><td id="p-ajust"></td><td class="b">Nível de Ação:</td><td id="p-ajustna"></td></tr>
+            </table>
+
+            <table class="rt">
+              <tr><td class="cinza sec">Dados da medição</td></tr>
+              <tr><td><b>Fontes geradoras</b>: <span id="p-fontes"></span></td></tr>
+              <tr><td><b>Trajetória / Meio de propagação:</b> <span id="p-trajetoria"></span></td></tr>
+              <tr><td class="cinza sec">Conclusões e pareceres</td></tr>
+              <tr><td><b>PARECER TÉCNICO</b>– <span id="p-parecer"></span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ACGIH ================= -->
+<section id="aba-acgih" class="painel">
+  <div class="cartao">
+    <h2>Cadastro de agentes ACGIH</h2>
+    <p class="dica">Os agentes cadastrados aqui ficam salvos neste navegador e aparecem na busca da calculadora (Automático usa a ACGIH quando o agente não tem valor em ppm na NR15).</p>
+    <form class="form-acgih" id="form-acgih" autocomplete="off">
+      <input type="hidden" id="a-idx">
+      <div class="campo-larg"><label class="rotulo">Descrição</label><input type="text" id="a-desc" required></div>
+      <div><label class="rotulo">TWA</label><input type="number" id="a-twa" step="any" min="0" required></div>
+      <div><label class="rotulo">Unidade</label>
+        <select id="a-un"><option>ppm</option><option>mg/m³</option><option>f/cc</option></select>
+      </div>
+      <div class="form-acgih-btns">
+        <button class="btn primario" type="submit" id="a-salvar">+ Cadastrar</button>
+        <button class="btn fantasma" type="button" id="a-cancelar" hidden>Cancelar</button>
+      </div>
+    </form>
+    <div class="barra-tabela">
+      <input type="search" id="a-busca" placeholder="🔎 Buscar agente…">
+      <button class="btn fantasma" id="a-restaurar">Restaurar tabela original</button>
+    </div>
+    <div class="tabela-wrap">
+      <table class="tabela"><thead><tr><th>Descrição</th><th>TWA</th><th>Un</th><th></th></tr></thead><tbody id="a-tbody"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NR15 ================= -->
+<section id="aba-nr15" class="painel">
+  <div class="cartao">
+    <h2>Tabela de agentes químicos — NR15 (Anexo 11)</h2>
+    <div class="barra-tabela"><input type="search" id="n-busca" placeholder="🔎 Buscar agente…"></div>
+    <div class="tabela-wrap">
+      <table class="tabela"><thead><tr><th>Agentes químicos</th><th>ppm*</th><th>mg/m³**</th></tr></thead><tbody id="n-tbody"></tbody></table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

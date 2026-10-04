@@ -1,0 +1,19 @@
+# Relatórios gerados, dados exportados e planilhas
+# (podem conter dados pessoais de trabalhadores)
+*.pdf
+*.json
+*.xlsx
+*.xls
+*.csv
+*.docx
+
+# Imagens de logos enviadas localmente
+logos/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
