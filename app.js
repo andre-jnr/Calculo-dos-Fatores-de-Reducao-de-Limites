@@ -22,7 +22,7 @@ function gravar(chave, valor) {
 }
 
 const EXEMPLO = {
-  calc: { jornada: "Acima de 8 horas", fonte: "Automático", horas: 12, agente: "Amônia", limitar: true },
+  calc: { jornada: "Acima de 8 horas", fonte: "Automático", horas: 12, agente: "Amônia", limitar: true, confirmado: "" },
   rel: {
     titulo: "RELATÓRIO AVALIAÇÃO AMBIENTAL – QUÍMICOS",
     logoEsq: "", logoDir: "",
@@ -140,13 +140,144 @@ function calcular() {
   return r;
 }
 
-/* ---------- Calculadora: UI ---------- */
-function montarListaAgentes() {
-  const nomes = [...new Set([...TAB_NR15.map((r) => r.agente), ...acgih.map((r) => r.agente)])];
-  $("#lista-agentes").innerHTML = nomes.map((n) => `<option value="${esc(n)}">`).join("");
-}
 function esc(s) {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+/* ---------- Listas suspensas com pesquisa ---------- */
+// Sem acento e em minúsculas, preservando o tamanho do texto (para destacar o trecho encontrado)
+const chaveBusca = (s) => String(s ?? "").toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[̀-ͯ]/g, "");
+const fechadores = [];
+document.addEventListener("mousedown", (e) => fechadores.forEach((f) => f(e.target)));
+
+function destacar(texto, q) {
+  const i = q ? chaveBusca(texto).indexOf(q) : -1;
+  if (i < 0) return esc(texto);
+  return esc(texto.slice(0, i)) + `<mark>${esc(texto.slice(i, i + q.length))}</mark>` + esc(texto.slice(i + q.length));
+}
+
+// Transforma um input em lista suspensa: mostra todas as opções e tem um campo de pesquisa.
+// opcoes() devolve [{ valor, detalhe? }]; livre = aceita valor que não está na lista.
+function criarLista(input, { opcoes, livre = false }) {
+  input.readOnly = true;
+  input.autocomplete = "off";
+  const caixa = document.createElement("div");
+  caixa.className = "lista";
+  input.replaceWith(caixa);
+  caixa.append(input);
+  const painel = document.createElement("div");
+  painel.className = "lista-painel";
+  painel.hidden = true;
+  painel.innerHTML = `<input type="search" class="lista-busca" placeholder="🔎 Pesquisar na lista…" aria-label="Pesquisar na lista">
+    <div class="lista-info"></div><ul class="lista-itens" role="listbox"></ul>
+    ${livre ? '<button type="button" class="lista-limpar">🧹 Deixar em branco</button>' : ""}`;
+  caixa.append(painel);
+  const busca = $(".lista-busca", painel), ul = $("ul", painel), info = $(".lista-info", painel);
+  let itens = [], ativo = 0;
+
+  function pintar() {
+    const q = chaveBusca(busca.value.trim());
+    const todas = opcoes();
+    itens = todas.filter((o) => !q || chaveBusca(o.valor).includes(q) || chaveBusca(o.detalhe).includes(q));
+    const achados = itens.length;
+    if (livre && q && !todas.some((o) => chaveBusca(o.valor) === q)) itens.push({ valor: busca.value.trim(), novo: true });
+    ativo = Math.max(0, Math.min(ativo, itens.length - 1));
+    info.textContent = q ? `${achados} de ${todas.length} itens` : `${todas.length} itens`;
+    ul.innerHTML = itens.length
+      ? itens.map((o, i) => `<li role="option" data-i="${i}" class="${i === ativo ? "ativo" : ""}${o.valor === input.value ? " sel" : ""}${o.novo ? " novo" : ""}">${
+          o.novo ? `✨ Usar “${esc(o.valor)}”` : `<span>${destacar(o.valor, q)}</span>${o.detalhe ? `<small>${esc(o.detalhe)}</small>` : ""}`
+        }</li>`).join("")
+      : `<li class="vazio">Nada encontrado 💭</li>`;
+    ul.querySelector(".ativo")?.scrollIntoView({ block: "nearest" });
+  }
+  function abrir() {
+    fechadores.forEach((f) => f(caixa));
+    painel.hidden = false;
+    caixa.classList.add("aberta");
+    // Se o painel passar da borda direita da tela, alinha pela direita do campo
+    painel.style.left = painel.style.right = "";
+    if (painel.getBoundingClientRect().right > document.documentElement.clientWidth - 8) {
+      painel.style.left = "auto"; painel.style.right = "0";
+    }
+    busca.value = "";
+    ativo = Math.max(0, opcoes().findIndex((o) => o.valor === input.value));
+    pintar();
+    busca.focus();
+  }
+  function fechar() { painel.hidden = true; caixa.classList.remove("aberta"); }
+  function escolher(valor) {
+    input.value = valor;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    fechar();
+    input.focus();
+  }
+
+  fechadores.push((alvo) => { if (!caixa.contains(alvo)) fechar(); });
+  input.addEventListener("click", () => (painel.hidden ? abrir() : fechar()));
+  input.addEventListener("keydown", (e) => {
+    if (["Enter", " ", "ArrowDown"].includes(e.key)) { e.preventDefault(); abrir(); }
+  });
+  busca.addEventListener("input", () => { ativo = 0; pintar(); });
+  busca.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      ativo += e.key === "ArrowDown" ? 1 : -1;
+      pintar();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (itens[ativo]) escolher(itens[ativo].valor);
+    } else if (e.key === "Escape") {
+      fechar(); input.focus();
+    } else if (e.key === "Tab") fechar();
+  });
+  ul.addEventListener("mousedown", (e) => e.preventDefault());
+  ul.addEventListener("click", (e) => {
+    const li = e.target.closest("li[data-i]");
+    if (li) escolher(itens[Number(li.dataset.i)].valor);
+  });
+  $(".lista-limpar", painel)?.addEventListener("click", () => escolher(""));
+}
+
+/* ---------- Calculadora: UI ---------- */
+let opcoesAgentes = [];
+function montarListaAgentes() {
+  const limiteNR = (r) => {
+    if (!r) return "";
+    if (ehNum(r.ppm)) return `NR15 ${fmt(r.ppm)} ppm`;
+    if (ehNum(r.mg)) return `NR15 ${fmt(r.mg)} mg/m³`;
+    return /asfixiante/i.test(String(r.ppm)) ? "NR15 asfixiante simples" : "";
+  };
+  const nomes = [...new Set([...TAB_NR15.map((r) => r.agente), ...acgih.map((r) => r.agente)])]
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+  opcoesAgentes = nomes.map((valor) => {
+    const ac = buscarACGIH(valor);
+    const detalhe = [limiteNR(buscarNR15(valor)), ac && ehNum(ac.twa) ? `ACGIH ${fmt(ac.twa)} ${ac.un}` : ""].filter(Boolean).join(" · ");
+    return { valor, detalhe };
+  });
+}
+
+/* ---------- Aviso de jornada fora do comum ---------- */
+let digitandoHoras = false;
+function alertaHoras() {
+  const { jornada, confirmado } = estado.calc;
+  const h = numero(estado.calc.horas);
+  if (!ehNum(h) || h <= 0 || confirmado === `${jornada}|${h}`) return "";
+  if (jornada === "Acima de 8 horas" && h > 12) {
+    return `Você está no cálculo <b>Acima de 8 horas</b>, em que a jornada é informada em <b>horas por dia</b>. ` +
+      `<b>${fmt(h, 2)} h/dia</b> passa de 12 horas diárias. Tem certeza de que esse número está certo?`;
+  }
+  if (jornada === "Até 8 horas" && h < 30) {
+    return `Você está no cálculo <b>Até 8 horas</b> (por dia), em que a jornada é informada em <b>horas por semana</b>. ` +
+      `<b>${fmt(h, 2)} h/semana</b> é menos de 30 horas semanais. Tem certeza dessa jornada? ` +
+      `Se a ideia era 8 horas por dia, informe o total da semana (ex.: 40 ou 44).`;
+  }
+  return "";
+}
+function pintarAlertaHoras() {
+  const txt = digitandoHoras ? "" : alertaHoras();
+  $("#alerta-horas").hidden = !txt;
+  $("#c-horas").classList.toggle("atencao", !!txt);
+  if (txt) $("#alerta-texto").innerHTML = txt;
 }
 
 function iniciarCalc() {
@@ -157,7 +288,24 @@ function iniciarCalc() {
     atualizarTudo();
   }));
   $$("#seg-fonte button").forEach((b) => b.addEventListener("click", () => { estado.calc.fonte = b.dataset.v; atualizarTudo(); }));
-  $("#c-horas").addEventListener("input", (e) => { estado.calc.horas = e.target.value === "" ? "" : Number(e.target.value); atualizarTudo(false); });
+  // O aviso de jornada espera a pessoa terminar de digitar (ex.: não avisar no "4" de "44")
+  const horas = $("#c-horas");
+  horas.addEventListener("input", (e) => {
+    estado.calc.horas = e.target.value === "" ? "" : Number(e.target.value);
+    digitandoHoras = true;
+    clearTimeout(horas._t);
+    horas._t = setTimeout(() => { digitandoHoras = false; pintarAlertaHoras(); }, 800);
+    atualizarTudo(false);
+  });
+  horas.addEventListener("blur", () => { clearTimeout(horas._t); digitandoHoras = false; pintarAlertaHoras(); });
+  $("#alerta-ok").addEventListener("click", () => {
+    estado.calc.confirmado = `${estado.calc.jornada}|${numero(estado.calc.horas)}`;
+    atualizarTudo();
+    toast("Jornada confirmada 💖");
+  });
+  $("#alerta-corrigir").addEventListener("click", () => { horas.focus(); horas.select(); });
+
+  criarLista($("#c-agente"), { opcoes: () => opcoesAgentes });
   $("#c-agente").addEventListener("input", (e) => { estado.calc.agente = e.target.value; atualizarTudo(false); });
   $("#c-limitar").addEventListener("change", (e) => { estado.calc.limitar = e.target.checked; atualizarTudo(); });
   $("#btn-usar-relatorio").addEventListener("click", () => irPara("relatorio"));
@@ -174,8 +322,9 @@ function pintarCalc(r) {
     ? "Acima de 8 horas: a jornada informada é em horas diárias (ex.: 12 h/dia)."
     : "Até 8 horas por dia: a jornada informada é em horas semanais (ex.: 44 ou 48 h/semana).";
   if (document.activeElement !== $("#c-horas")) $("#c-horas").value = c.horas;
-  if (document.activeElement !== $("#c-agente")) $("#c-agente").value = c.agente;
+  $("#c-agente").value = c.agente;
   $("#c-limitar").checked = !!c.limitar;
+  pintarAlertaHoras();
 
   $("#r-resultado").textContent = r.erro ? "—" : `${fmt(r.resultado)} ${r.un}`;
   $("#r-nivel").textContent = r.erro ? "—" : `${fmt(r.nivel)} ${r.un}`;
@@ -269,7 +418,14 @@ function iniciarRelatorio() {
   $$("[data-rm]").forEach((b) => b.addEventListener("click", () => { estado.rel[b.dataset.rm] = ""; atualizarTudo(); }));
 
   $("#btn-add-epi").addEventListener("click", () => { estado.rel.epis.push({ nome: "", ca: "" }); montarEpis(); atualizarTudo(); $("#lista-epi .epi-linha:last-child input").focus(); });
-  $$("[data-ir]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); irPara(a.dataset.ir); }));
+  $("#form-rel").addEventListener("click", (e) => {
+    const a = e.target.closest("[data-ir]");
+    if (a) { e.preventDefault(); irPara(a.dataset.ir); }
+  });
+
+  const lista = (valores) => () => valores.map((valor) => ({ valor }));
+  criarLista($('[data-k="exposicao"]'), { livre: true, opcoes: lista(["PERMANENTE", "INTERMITENTE", "OCASIONAL", "HABITUAL"]) });
+  criarLista($('[data-k="metodo"]'), { livre: true, opcoes: lista(["NIOSH 6016", "NIOSH 1500", "NIOSH 0500", "NIOSH 0600", "NIOSH 7300"]) });
 
   $("#btn-pdf").addEventListener("click", baixarPdf);
   $("#btn-imprimir").addEventListener("click", () => window.print());
@@ -393,6 +549,9 @@ function pintarRelatorio(r) {
   $("#resumo-agente").innerHTML = r.erro
     ? `<b>${esc(estado.calc.agente || "Nenhum agente")}</b><br>⚠️ ${esc(r.erro)}`
     : `<b>${esc(estado.calc.agente)}</b> · ${esc(r.origem)} · ${esc(estado.calc.jornada)} (${esc(jAuto)})<br>TLV-TWA ajustado: <b>${fmt(r.resultado)} ${esc(r.un)}</b> · Nível de ação: <b>${fmt(r.nivel)} ${esc(r.un)}</b>`;
+  if (alertaHoras()) {
+    $("#resumo-agente").innerHTML += `<br>🎀 Jornada fora do comum ainda não confirmada — confira na <a href="#" data-ir="calc">Calculadora</a>.`;
+  }
 
   ajustarEscala();
 }
@@ -492,6 +651,7 @@ function limparFormAcgih() {
   $("#a-cancelar").hidden = true;
 }
 function iniciarAcgih() {
+  criarLista($("#a-un"), { opcoes: () => ["ppm", "mg/m³", "f/cc"].map((valor) => ({ valor })) });
   $("#form-acgih").addEventListener("submit", (e) => {
     e.preventDefault();
     const item = { agente: $("#a-desc").value.trim(), twa: Number($("#a-twa").value), un: $("#a-un").value };

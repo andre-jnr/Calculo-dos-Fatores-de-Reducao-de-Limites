@@ -37,7 +37,9 @@ Ao carregar, o estado salvo é mesclado sobre `EXEMPLO`, então campos novos adi
 | Armazenamento | `ler`, `gravar`, `salvar`, `salvarAcgih` |
 | Buscas | `buscarNR15`, `buscarACGIH` (comparação sem diferenciar maiúsculas) |
 | Cálculo | `fatorReducao`, `calcular` |
+| Listas suspensas | `criarLista` (componente com pesquisa), `chaveBusca`, `destacar` |
 | Calculadora | `iniciarCalc`, `pintarCalc`, `montarListaAgentes` |
+| Aviso de jornada | `alertaHoras`, `pintarAlertaHoras` |
 | Relatório | `iniciarRelatorio`, `preencherForm`, `montarEpis`, `medicao`, `parecerAuto`, `pintarRelatorio` |
 | Prévia | `ajustarEscala` (reduz a folha A4 para caber na tela) |
 | PDF | `baixarPdf`, `nomeArquivo` |
@@ -65,6 +67,23 @@ Edite `data.js`. Formatos:
 
 A tabela ACGIH salva no navegador tem prioridade sobre `TAB_ACGIH_PADRAO`. Para ver a lista nova, use **Restaurar tabela original** na aba ACGIH.
 
+### Criar uma nova lista suspensa
+
+Use um `<input type="text">` comum no HTML e transforme-o em `app.js`:
+
+```js
+criarLista($("#meu-campo"), {
+  livre: true, // aceita valor fora da lista
+  opcoes: () => [{ valor: "Opção A" }, { valor: "Opção B", detalhe: "texto menor abaixo" }]
+});
+```
+
+O componente deixa o campo somente leitura e, ao escolher, dispara o evento `input` no campo, então os ouvintes existentes (ex.: `data-k` do relatório) continuam funcionando. Não use `<datalist>` nem `<select>`, para manter o mesmo visual e a pesquisa.
+
+### Mudar os limites do aviso de jornada
+
+Função `alertaHoras()` em `app.js` (hoje: mais de 12 h/dia ou menos de 30 h/semana). A confirmação fica salva em `estado.calc.confirmado` como `"<jornada>|<horas>"`, então o aviso volta se o número mudar.
+
 ### Mudar o texto do parecer automático
 
 Função `parecerAuto(r)` em `app.js`.
@@ -89,6 +108,9 @@ Antes de publicar uma alteração, abra `index.html` e confira:
 - [ ] Amônia, Automático, 12 h/dia → 10 ppm, nível de ação 5 ppm
 - [ ] 36 h/semana com *FR máximo = 1* ligado → FR aplicado = 1 e aviso
 - [ ] Acetileno → aviso de asfixiante simples
+- [ ] Acima de 8 horas com 14 → aviso de jornada; **Sim, tenho certeza** esconde o aviso
+- [ ] Até 8 horas com 20 → aviso de horas semanais; com 35 → sem aviso
+- [ ] Listas abrem com todas as opções; pesquisar `acido` encontra *Ácido…*; ↑ ↓ Enter escolhem
 - [ ] Horários com intervalo → tempo de medição desconta o intervalo
 - [ ] **Baixar PDF** e **Imprimir** geram 1 página A4
 - [ ] Exportar → Novo relatório → Importar restaura os dados

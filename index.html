@@ -54,10 +54,20 @@
         <input type="number" id="c-horas" min="1" step="0.5">
         <span id="un-horas">h/dia</span>
       </div>
+      <div class="alerta-horas" id="alerta-horas" role="alert" hidden>
+        <span class="alerta-laco">🎀</span>
+        <div>
+          <b>Confere essa jornada? 💭</b>
+          <p id="alerta-texto"></p>
+          <div class="alerta-btns">
+            <button type="button" class="btn primario mini" id="alerta-ok">Sim, tenho certeza 💖</button>
+            <button type="button" class="btn fantasma mini" id="alerta-corrigir">Corrigir</button>
+          </div>
+        </div>
+      </div>
 
       <label class="rotulo" for="c-agente">Agente 🧪</label>
-      <input type="text" id="c-agente" list="lista-agentes" placeholder="Digite para buscar o agente químico…" autocomplete="off">
-      <datalist id="lista-agentes"></datalist>
+      <input type="text" id="c-agente" placeholder="Clique para escolher o agente químico…" autocomplete="off">
 
       <label class="chk">
         <input type="checkbox" id="c-limitar">
@@ -150,10 +160,9 @@
         <label class="rotulo">Cargo avaliado</label>
         <input type="text" data-k="cargo">
         <div class="duas">
-          <div><label class="rotulo">Tipo de exposição</label><input type="text" data-k="exposicao" list="lista-exposicao"></div>
+          <div><label class="rotulo">Tipo de exposição</label><input type="text" data-k="exposicao" placeholder="Escolha…"></div>
           <div><label class="rotulo">Jornada de trabalho</label><input type="text" data-k="jornadaTexto" placeholder="automático"></div>
         </div>
-        <datalist id="lista-exposicao"><option value="PERMANENTE"><option value="INTERMITENTE"><option value="OCASIONAL"><option value="HABITUAL"></datalist>
       </details>
 
       <details class="bloco" open>
@@ -189,11 +198,10 @@
         <p class="dica">Agente, jornada e limites vêm da <a href="#" data-ir="calc">Calculadora</a>.</p>
         <div class="resumo-agente" id="resumo-agente"></div>
         <div class="tres">
-          <div><label class="rotulo">Método</label><input type="text" data-k="metodo" list="lista-metodos"></div>
+          <div><label class="rotulo">Método</label><input type="text" data-k="metodo" placeholder="Escolha…"></div>
           <div><label class="rotulo">Unidade</label><input type="text" data-k="unidade" placeholder="automático"></div>
           <div><label class="rotulo">Resultado medido</label><input type="number" step="any" data-k="resultado"></div>
         </div>
-        <datalist id="lista-metodos"><option value="NIOSH 6016"><option value="NIOSH 1500"><option value="NIOSH 0500"><option value="NIOSH 0600"><option value="NIOSH 7300"></datalist>
       </details>
 
       <details class="bloco" open>
@@ -297,7 +305,7 @@
       <div class="campo-larg"><label class="rotulo">Descrição</label><input type="text" id="a-desc" required></div>
       <div><label class="rotulo">TWA</label><input type="number" id="a-twa" step="any" min="0" required></div>
       <div><label class="rotulo">Unidade</label>
-        <select id="a-un"><option>ppm</option><option>mg/m³</option><option>f/cc</option></select>
+        <input type="text" id="a-un" value="ppm">
       </div>
       <div class="form-acgih-btns">
         <button class="btn primario" type="submit" id="a-salvar">+ Cadastrar</button>

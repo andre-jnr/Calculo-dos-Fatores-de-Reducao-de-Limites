@@ -93,6 +93,61 @@ output { display: block; padding: 10px 12px; border-radius: 12px; background: va
 .campo-unidade { display: flex; align-items: center; gap: 8px; }
 .campo-unidade span { font-weight: 700; color: var(--texto-suave); white-space: nowrap; }
 
+/* ---------- Aviso de jornada ---------- */
+input.atencao { border-color: var(--rosa-500); background: var(--rosa-50); box-shadow: 0 0 0 4px rgba(232,87,142,.16); }
+.alerta-horas {
+  display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; padding: 14px 16px;
+  border-radius: 18px; border: 2px solid var(--rosa-300);
+  background: linear-gradient(135deg, #fff0f6 0%, #ffe1ee 55%, #f6e9ff 100%);
+  box-shadow: 0 10px 24px -14px var(--rosa-600);
+  animation: alerta-entra .35s cubic-bezier(.3, 1.5, .6, 1);
+}
+.alerta-horas[hidden] { display: none; }
+.alerta-laco { font-size: 26px; line-height: 1; animation: laco 1.6s ease-in-out infinite; }
+.alerta-horas b { color: var(--rosa-700); font-family: "Quicksand", sans-serif; font-size: 15px; }
+.alerta-horas p { margin: 4px 0 10px; font-size: 13.5px; line-height: 1.5; }
+.alerta-horas p b { font-family: inherit; font-size: inherit; color: var(--rosa-600); }
+.alerta-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn.mini { padding: 7px 14px; font-size: 13px; border-radius: 999px; }
+@keyframes alerta-entra { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes laco { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg) scale(1.08); } }
+
+/* ---------- Listas suspensas com pesquisa ---------- */
+.lista { position: relative; }
+.lista > input { cursor: pointer; padding-right: 36px; caret-color: transparent; }
+.lista::after {
+  content: "▾"; position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--rosa-500); font-size: 14px; pointer-events: none; transition: transform .2s;
+}
+.lista.aberta::after { transform: translateY(-50%) rotate(180deg); }
+.lista.aberta > input { border-color: var(--rosa-400); box-shadow: 0 0 0 4px rgba(247,127,171,.18); }
+.lista-painel {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; width: max(100%, 260px);
+  background: #fff; border: 1.5px solid var(--rosa-200); border-radius: 16px; padding: 8px;
+  box-shadow: 0 18px 40px -14px rgba(201, 60, 116, .45);
+  animation: alerta-entra .2s ease;
+}
+.lista-painel[hidden] { display: none; }
+.lista-painel .lista-busca { background: var(--rosa-50); border-radius: 11px; padding: 9px 11px; }
+.lista-info { font-size: 11.5px; font-weight: 700; color: var(--texto-suave); padding: 6px 4px 4px; }
+.lista-itens { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
+.lista-itens li {
+  display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.lista-itens li small { font-size: 11.5px; font-weight: 600; color: var(--texto-suave); }
+.lista-itens li.ativo { background: var(--rosa-100); }
+.lista-itens li.sel { color: var(--rosa-600); font-weight: 800; }
+.lista-itens li.sel span::after { content: " 💖"; }
+.lista-itens li.novo { color: var(--rosa-600); font-weight: 800; border-top: 1px dashed var(--borda); margin-top: 4px; }
+.lista-itens li.vazio { cursor: default; color: var(--texto-suave); text-align: center; }
+.lista-itens mark { background: var(--rosa-200); color: inherit; border-radius: 4px; padding: 0 1px; }
+.lista-limpar {
+  width: 100%; margin-top: 6px; border: 0; border-top: 1px dashed var(--borda); background: none;
+  padding: 8px 4px 2px; font: 700 12.5px "Nunito", sans-serif; color: var(--texto-suave); cursor: pointer; text-align: left;
+}
+.lista-limpar:hover { color: var(--rosa-600); }
+
 .chk { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 13px; cursor: pointer; }
 .chk input { accent-color: var(--rosa-500); width: 17px; height: 17px; margin-top: 1px; flex: none; }
 

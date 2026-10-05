@@ -46,10 +46,21 @@ Reproduz a fórmula da planilha *Cálculo dos fatores de redução de limites*.
 - **Fonte do limite**:
   - `Automático`: procura primeiro na NR15; se o agente não tiver valor em ppm, usa a ACGIH (equivale ao `SEERRO(PROCX(...))` da planilha).
   - `NR15` ou `ACGIH`: força a tabela escolhida.
-- **Agente**: campo com busca entre os agentes das duas tabelas.
+- **Aviso de jornada fora do comum**: aparece quando o número provavelmente foi digitado na unidade errada. A pessoa pode confirmar (**Sim, tenho certeza**) ou corrigir; o cálculo é feito de qualquer forma.
+  - `Acima de 8 horas` com mais de **12 h/dia**;
+  - `Até 8 horas` com menos de **30 h/semana** (lembra que esse cálculo usa horas semanais).
+- **Agente**: lista com todos os agentes das duas tabelas, cada um com seus limites NR15/ACGIH ao lado.
 - **FR máximo = 1** (ligado por padrão): impede que o fator de redução *aumente* o limite (ver [nota](#trava-do-fr)).
 
 Mostra o **limite ajustado** (TLV-TWA ajustado), o **nível de ação**, o limite de origem, o FR e a conta passo a passo. O botão **Usar no relatório** leva os valores para a aba Relatório.
+
+### 🔎 Listas suspensas
+
+Todas as listas (agente, tipo de exposição, método e unidade ACGIH) abrem mostrando **todas as opções** e têm um **campo de pesquisa** no topo:
+
+- a pesquisa ignora acentos e maiúsculas (`acido` encontra *Ácido acético*) e destaca o trecho encontrado;
+- dá para navegar com ↑ ↓, escolher com Enter e fechar com Esc;
+- em **Tipo de exposição** e **Método** também dá para usar um valor que não está na lista (opção *Usar “…”*) ou deixar o campo em branco.
 
 ### 📄 Relatório
 
